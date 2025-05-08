@@ -48,3 +48,37 @@ const gameState = {
   });
   
   renderWorld();
+  function startCombat(enemy) {
+    let combatActive = true;
+    
+    function combatLoop() {
+      const playerAction = prompt(`Encountered ${enemy.name}! [A]ttack [F]lee`);
+      
+      if (playerAction?.toUpperCase() === 'A') {
+        const damage = Math.floor(Math.random() * 20) + 10;
+        enemy.health -= damage;
+        alert(`You strike with your ${gameState.player.weapon} for ${damage} damage!`);
+        
+        if (enemy.health <= 0) {
+          alert(`${enemy.name} defeated!`);
+          combatActive = false;
+          return;
+        }
+        
+        // Enemy counterattack
+        const enemyDamage = Math.floor(Math.random() * enemy.attack);
+        gameState.player.health -= enemyDamage;
+        alert(`${enemy.name} retaliates for ${enemyDamage} damage!`);
+        
+        if (gameState.player.health <= 0) {
+          alert("Your journey ends here...");
+          combatActive = false;
+          return;
+        }
+        
+        combatLoop();
+      }
+    }
+    
+    combatLoop();
+  }
