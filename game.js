@@ -82,3 +82,25 @@ const gameState = {
     
     combatLoop();
   }
+  Object.assign(gameState.player, {
+    xp: 0,
+    level: 1,
+    nextLevel: 100,
+    
+    levelUp() {
+      this.xp -= this.nextLevel;
+      this.level++;
+      this.nextLevel = Math.floor(this.nextLevel * 1.5);
+      this.health += 20;
+      this.magicka += 10;
+      this.stamina += 15;
+    }
+  });
+  
+  function gainXP(amount) {
+    gameState.player.xp += amount;
+    if (gameState.player.xp >= gameState.player.nextLevel) {
+      gameState.player.levelUp();
+      alert(`Reached Level ${gameState.player.level}!`);
+    }
+  }
