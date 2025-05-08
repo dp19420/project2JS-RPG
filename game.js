@@ -18,3 +18,33 @@ const gameState = {
       "Ka'ishi Ruins": ["Dragon Shrine"]
     }
   };
+  function renderWorld() {
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    ctx.fillStyle = '#2d2d2d';
+    ctx.fillRect(0, 0, 800, 600);
+    
+    // Draw location text
+    ctx.fillStyle = 'white';
+    ctx.font = '20px Arial';
+    ctx.fillText(`Current Location: ${gameState.player.location}`, 20, 40);
+    
+    // Draw location connections
+    gameState.locations[gameState.player.location].forEach((loc, index) => {
+      ctx.fillText(`${index+1}. Travel to ${loc}`, 20, 80 + (index*30));
+    });
+  }
+  
+  document.addEventListener('keypress', (e) => {
+    if (e.key >=1 && e.key <=9) {
+      const locationIndex = parseInt(e.key) -1;
+      const newLocation = gameState.locations[gameState.player.location][locationIndex];
+      if (newLocation) {
+        gameState.player.location = newLocation;
+        renderWorld();
+      }
+    }
+  });
+  
+  renderWorld();
