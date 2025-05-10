@@ -135,25 +135,66 @@ document.addEventListener('keypress', (e) => {
   }
 });
     
-  Object.assign(gameState.player, {
-    xp: 0,
-    level: 1,
-    nextLevel: 100,
-    
-    levelUp() {
-      this.xp -= this.nextLevel;
-      this.level++;
-      this.nextLevel = Math.floor(this.nextLevel * 1.5);
-      this.health += 20;
-      this.magicka += 10;
-      this.stamina += 15;
-    }
-  });
   
-  function gainXP(amount) {
-    gameState.player.xp += amount;
-    if (gameState.player.xp >= gameState.player.nextLevel) {
-      gameState.player.levelUp();
-      alert(`Reached Level ${gameState.player.level}!`);
+Object.assign(gameState.player, {
+  xp: 0,
+  level: 1,
+  nextLevel: 100,
+
+  levelUp() {
+    this.xp -= this.nextLevel;
+    this.level++;
+    this.nextLevel = Math.floor(this.nextLevel * 1.5);
+    this.health += 20;
+    this.magicka += 10;
+    this.stamina += 15;
+  }
+});
+
+function gainXP(amount) {
+  gameState.player.xp += amount;
+  if (gameState.player.xp >= gameState.player.nextLevel) {
+    gameState.player.levelUp();
+    alert(`Reached Level ${gameState.player.level}!`);
+  }
+}
+gameState.quests = {
+  "Lotus Valley": {
+    started: false,
+    completed: false,
+    rewardGiven: false
+  }
+};
+
+function checkQuest() {
+  // Offer quest in Lotus Valley
+  if (
+    gameState.player.location === "Lotus Valley" &&
+    !gameState.quests["Lotus Valley"].started
+  ) {
+    const choice = prompt("A wounded monk asks for help retrieving a sacred lotus from the Kamal Ice Fortress. Will you accept? [Y/N]");
+    if (choice?.toUpperCase() === "Y") {
+      gameState.quests["Lotus Valley"].started = true;
+      alert("Quest started: Retrieve the Sacred Lotus from Kamal Ice Fortress!");
     }
   }
+  // Complete quest at Kamal Ice Fortress
+  if (
+    gameState.player.location === "Kamal Ice Fortress" &&
+    gameState.quests["Lotus Valley"].started &&
+    !gameState.quests["Lotus Valley"].completed
+  ) {
+    alert("You found the Sacred Lotus! Return it to the monk in Lotus Valley.");
+    gameState.quests["Lotus Valley"].completed = true;
+  }
+  // Reward quest in Lotus Valley
+  if (
+    gameState.player.location === "Lotus Valley" &&
+    gameState.quests["Lotus Valley"].completed &&
+    !gameState.quests["Lotus Valley"].rewardGiven
+  ) {
+    alert("The monk thanks you and bestows a blessing. Quest complete!");
+    gainXP(100);
+    gameState.quests["Lotus Valley"].rewardGiven = true;
+  }
+}
