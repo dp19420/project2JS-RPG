@@ -103,7 +103,7 @@ function startCombat(enemy) {
       combatLoop();
     } else if (playerAction?.toUpperCase() === 'F') {
       alert("You flee back to your previous location!");
-      // Optionally, move player back or handle fleeing logic
+      
       combatActive = false;
       return;
     }
@@ -111,7 +111,29 @@ function startCombat(enemy) {
 
   combatLoop();
 }
+document.addEventListener('keypress', (e) => {
+  if (e.key >= 1 && e.key <= 9) {
+    const loc = gameState.locations[gameState.player.location];
+    const locationIndex = parseInt(e.key) - 1;
+    const newLocation = loc.connections[locationIndex];
+    if (newLocation) {
+      gameState.player.location = newLocation;
+      renderWorld();
 
+      // Trigger encounter if present
+      if (locationEncounters[newLocation]) {
+        // Clone the enemy so we don't mutate the base
+        const enemy = { ...locationEncounters[newLocation] };
+        startCombat(enemy);
+
+        // Award XP if player survives and enemy is defeated
+        if (gameState.player.health > 0 && enemy.health <= 0) {
+          gainXP(50);
+        }
+      }
+    }
+  }
+});
     
   Object.assign(gameState.player, {
     xp: 0,
