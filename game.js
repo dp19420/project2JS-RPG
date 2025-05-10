@@ -61,6 +61,17 @@ function renderWorld() {
   loc.connections.forEach((locName, index) => {
     ctx.fillText(`${index+1}. Travel to ${locName}`, 20, 110 + (index*30));
   });
+
+  // Draw player stats
+  ctx.font = '16px Arial';
+  ctx.fillText(`Health: ${gameState.player.health}`, 600, 40);
+  ctx.fillText(`Magicka: ${gameState.player.magicka}`, 600, 60);
+  ctx.fillText(`Stamina: ${gameState.player.stamina}`, 600, 80);
+  ctx.fillText(`XP: ${gameState.player.xp} / ${gameState.player.nextLevel}`, 600, 100);
+  ctx.fillText(`Level: ${gameState.player.level}`, 600, 120);
+
+  // Check for quest events
+  checkQuest();
 }
 
 renderWorld();
