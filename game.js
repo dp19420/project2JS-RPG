@@ -65,40 +65,54 @@ function renderWorld() {
 
 renderWorld();
 
-  function startCombat(enemy) {
-    let combatActive = true;
-    
-    function combatLoop() {
-      const playerAction = prompt(`Encountered ${enemy.name}! [A]ttack [F]lee`);
-      
-      if (playerAction?.toUpperCase() === 'A') {
-        const damage = Math.floor(Math.random() * 20) + 10;
-        enemy.health -= damage;
-        alert(`You strike with your ${gameState.player.weapon} for ${damage} damage!`);
-        
-        if (enemy.health <= 0) {
-          alert(`${enemy.name} defeated!`);
-          combatActive = false;
-          return;
-        }
-        
-        // Enemy counterattack
-        const enemyDamage = Math.floor(Math.random() * enemy.attack);
-        gameState.player.health -= enemyDamage;
-        alert(`${enemy.name} retaliates for ${enemyDamage} damage!`);
-        
-        if (gameState.player.health <= 0) {
-          alert("Your journey ends here...");
-          combatActive = false;
-          return;
-        }
-        
-        combatLoop();
+const locationEncounters = {
+  "Frostwall Pass": { name: "Kamal Frost Warrior", health: 80, attack: 15 },
+  "Ka'ishi Ruins": { name: "Tsaesci Serpent Guard", health: 65, attack: 20 },
+  "Kamal Ice Fortress": { name: "Kamal Warlord", health: 120, attack: 25 },
+  "Moon-Sugar Fields": { name: "Bandit Skirmisher", health: 50, attack: 10 }
+};
+
+function startCombat(enemy) {
+  let combatActive = true;
+
+  function combatLoop() {
+    const playerAction = prompt(`Encountered ${enemy.name}! [A]ttack [F]lee`);
+
+    if (playerAction?.toUpperCase() === 'A') {
+      const damage = Math.floor(Math.random() * 20) + 10;
+      enemy.health -= damage;
+      alert(`You strike with your ${gameState.player.weapon} for ${damage} damage!`);
+
+      if (enemy.health <= 0) {
+        alert(`${enemy.name} defeated!`);
+        combatActive = false;
+        return;
       }
+
+      // Enemy counterattack
+      const enemyDamage = Math.floor(Math.random() * enemy.attack);
+      gameState.player.health -= enemyDamage;
+      alert(`${enemy.name} retaliates for ${enemyDamage} damage!`);
+
+      if (gameState.player.health <= 0) {
+        alert("Your journey ends here...");
+        combatActive = false;
+        return;
+      }
+
+      combatLoop();
+    } else if (playerAction?.toUpperCase() === 'F') {
+      alert("You flee back to your previous location!");
+      // Optionally, move player back or handle fleeing logic
+      combatActive = false;
+      return;
     }
-    
-    combatLoop();
   }
+
+  combatLoop();
+}
+
+    
   Object.assign(gameState.player, {
     xp: 0,
     level: 1,
