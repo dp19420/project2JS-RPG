@@ -1,53 +1,70 @@
 // game.js
 const gameState = {
-    player: {
-      name: "Tosh Raka",
-      health: 100,
-      magicka: 50,
-      stamina: 75,
-      weapon: "Tsaesci Katana",
-      location: "Po Tun Highlands"
+  player: {
+    name: "Tosh Raka",
+    health: 100,
+    magicka: 50,
+    stamina: 75,
+    weapon: "Tsaesci Katana",
+    location: "Po Tun Highlands"
+  },
+  locations: {
+    "Po Tun Highlands": {
+      connections: ["Frostwall Pass", "Ka'ishi Ruins", "Lotus Valley"],
+      description: "Rolling hills dotted with ancient Po Tun temples."
     },
-    enemies: [
-      { name: "Kamal Frost Warrior", health: 80, attack: 15 },
-      { name: "Tsaesci Serpent Guard", health: 65, attack: 20 }
-    ],
-    locations: {
-      "Po Tun Highlands": ["Frostwall Pass", "Ka'ishi Ruins"],
-      "Frostwall Pass": ["Kamal Ice Fortress"],
-      "Ka'ishi Ruins": ["Dragon Shrine"]
+    "Frostwall Pass": {
+      connections: ["Kamal Ice Fortress", "Po Tun Highlands"],
+      description: "A treacherous, icy mountain path."
+    },
+    "Ka'ishi Ruins": {
+      connections: ["Dragon Shrine", "Po Tun Highlands"],
+      description: "Crumbling ruins echoing with forgotten magic."
+    },
+    "Lotus Valley": {
+      connections: ["Po Tun Highlands", "Moon-Sugar Fields"],
+      description: "A serene valley filled with blooming lotuses."
+    },
+    "Moon-Sugar Fields": {
+      connections: ["Lotus Valley"],
+      description: "Fields of sweet, shimmering moon-sugar cane."
+    },
+    "Kamal Ice Fortress": {
+      connections: ["Frostwall Pass"],
+      description: "The icy stronghold of the Kamal invaders."
+    },
+    "Dragon Shrine": {
+      connections: ["Ka'ishi Ruins"],
+      description: "A sacred site where dragons once communed."
     }
-  };
-  function renderWorld() {
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    
-    ctx.fillStyle = '#2d2d2d';
-    ctx.fillRect(0, 0, 800, 600);
-    
-    // Draw location text
-    ctx.fillStyle = 'white';
-    ctx.font = '20px Arial';
-    ctx.fillText(`Current Location: ${gameState.player.location}`, 20, 40);
-    
-    // Draw location connections
-    gameState.locations[gameState.player.location].forEach((loc, index) => {
-      ctx.fillText(`${index+1}. Travel to ${loc}`, 20, 80 + (index*30));
-    });
   }
-  
-  document.addEventListener('keypress', (e) => {
-    if (e.key >=1 && e.key <=9) {
-      const locationIndex = parseInt(e.key) -1;
-      const newLocation = gameState.locations[gameState.player.location][locationIndex];
-      if (newLocation) {
-        gameState.player.location = newLocation;
-        renderWorld();
-      }
-    }
+};
+
+function renderWorld() {
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#2d2d2d';
+  ctx.fillRect(0, 0, 800, 600);
+
+  // Draw location text
+  const loc = gameState.locations[gameState.player.location];
+  ctx.fillStyle = 'white';
+  ctx.font = '20px Arial';
+  ctx.fillText(`Current Location: ${gameState.player.location}`, 20, 40);
+
+  // Draw location description
+  ctx.font = '16px Arial';
+  ctx.fillText(loc.description, 20, 70);
+
+  // Draw location connections
+  ctx.font = '18px Arial';
+  loc.connections.forEach((locName, index) => {
+    ctx.fillText(`${index+1}. Travel to ${locName}`, 20, 110 + (index*30));
   });
-  
-  renderWorld();
+}
+
+renderWorld();
+
   function startCombat(enemy) {
     let combatActive = true;
     
