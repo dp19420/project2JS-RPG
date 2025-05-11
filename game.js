@@ -51,7 +51,7 @@ const gameState = {
       description: "A sacred site where dragons once communed."
     }
   },
-  gameOver: false
+  gameOver: false // <-- New property for game over state
 };
 
 const locationEncounters = {
@@ -136,9 +136,9 @@ function renderWorld() {
     ctx.fillText(`0. Go Back`, 20, 110 + loc.connections.length * 30);
   }
 
-  // Player stats
+  // Player stats (clamp health to 0 for display)
   ctx.font = '16px MedievalSharp, Arial, serif';
-  ctx.fillText(`Health: ${gameState.player.health}`, 600, 20);
+  ctx.fillText(`Health: ${Math.max(0, gameState.player.health)}`, 600, 20);
   ctx.fillText(`Magicka: ${gameState.player.magicka}`, 600, 45);
   ctx.fillText(`Stamina: ${gameState.player.stamina}`, 600, 70);
   ctx.fillText(`XP: ${gameState.player.xp} / ${gameState.player.nextLevel}`, 600, 95);
@@ -168,8 +168,8 @@ function drawCombat(ctx) {
   ctx.fillText(combat.message, 40, 40);
 
   ctx.font = '20px MedievalSharp, Arial, serif';
-  ctx.fillText(`Your Health: ${gameState.player.health}`, 40, 100);
-  ctx.fillText(`${combat.enemy.name} Health: ${combat.enemy.health}`, 40, 140);
+  ctx.fillText(`Your Health: ${Math.max(0, gameState.player.health)}`, 40, 100);
+  ctx.fillText(`${combat.enemy.name} Health: ${Math.max(0, combat.enemy.health)}`, 40, 140);
 
   ctx.font = '18px MedievalSharp, Arial, serif';
   ctx.fillText('[A] Attack', 40, 200);
@@ -188,7 +188,8 @@ function drawDialog(ctx) {
     ctx.fillText(`[${opt.key}] ${opt.text}`, 40, 100 + i * 30);
   });
 }
-// Game Over rendering
+
+// Game Over drawing
 function drawGameOver(ctx) {
   // Dim the background
   ctx.fillStyle = "rgba(0,0,0,0.7)";
@@ -205,6 +206,7 @@ function drawGameOver(ctx) {
 
   ctx.textAlign = "left"; // Reset alignment for other renders
 }
+
 // Start combat mode
 function startCombat(enemy) {
   gameState.mode = "combat";
@@ -260,6 +262,7 @@ function checkQuest() {
   }
 }
 
+// Restart the game
 function restartGame() {
   // Reset player stats
   Object.assign(gameState.player, {
@@ -286,8 +289,6 @@ function restartGame() {
 
 // Keyboard input handler
 document.addEventListener('keypress', (e) => {
-  const key = e.key.toUpperCase();
-
   // Game Over: Only allow restart
   if (gameState.mode === "gameover" || gameState.gameOver) {
     if (e.key.toUpperCase() === 'R') {
@@ -297,11 +298,14 @@ document.addEventListener('keypress', (e) => {
     return;
   }
 
+  const key = e.key.toUpperCase();
+
   if (gameState.mode === "combat" && gameState.combat) {
     if (key === 'A') {
       // Player attacks
       const damage = Math.floor(Math.random() * 20) + 10;
       gameState.combat.enemy.health -= damage;
+      gameState.combat.enemy.health = Math.max(0, gameState.combat.enemy.health); // Clamp
       gameState.combat.message = `You strike for ${damage} damage!`;
 
       if (gameState.combat.enemy.health <= 0) {
@@ -309,19 +313,23 @@ document.addEventListener('keypress', (e) => {
         gameState.mode = "exploring";
         gameState.combat = null;
         gainXP(50);
+        renderWorld();
       } else {
         // Enemy counterattack after short delay
         setTimeout(() => {
           const enemyDamage = Math.floor(Math.random() * locationEncounters[gameState.player.location].attack);
           gameState.player.health -= enemyDamage;
+          gameState.player.health = Math.max(0, gameState.player.health); // Clamp to zero
           gameState.combat.message += `\n${gameState.combat.enemy.name} retaliates for ${enemyDamage} damage!`;
 
           if (gameState.player.health <= 0) {
-             gameState.combat.message = "Your journey ends here...";
-             gameState.mode = "gameover";
-             gameState.combat = null;
-             gameState.gameOver = true;
-         }
+            gameState.combat.message += "\nYour journey ends here...";
+            gameState.mode = "gameover";
+            gameState.combat = null;
+            gameState.gameOver = true;
+            renderWorld();
+            return;
+          }
           renderWorld();
         }, 500);
       }
