@@ -16,7 +16,7 @@ body {
   user-select: none;
 }
 
-/* Optional: add subtle paper texture with noise using a pseudo element */
+/*Add subtle paper texture with noise using a pseudo element */
 body::before {
   content: "";
   position: fixed;

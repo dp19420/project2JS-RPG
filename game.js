@@ -50,7 +50,8 @@ const gameState = {
       connections: ["Ka'ishi Ruins"],
       description: "A sacred site where dragons once communed."
     }
-  }
+  },
+  gameOver: false
 };
 
 const locationEncounters = {
@@ -90,6 +91,12 @@ function addMessage(msg) {
 function renderWorld() {
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
+
+  // Game Over check
+  if (gameState.mode === "gameover" || gameState.gameOver) {
+    drawGameOver(ctx);
+    return;
+  }
 
   // Parchment gradient background
   const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
@@ -181,7 +188,23 @@ function drawDialog(ctx) {
     ctx.fillText(`[${opt.key}] ${opt.text}`, 40, 100 + i * 30);
   });
 }
+// Game Over rendering
+function drawGameOver(ctx) {
+  // Dim the background
+  ctx.fillStyle = "rgba(0,0,0,0.7)";
+  ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
+  ctx.font = 'bold 48px MedievalSharp, Arial, serif';
+  ctx.fillStyle = "#e74c3c";
+  ctx.textAlign = "center";
+  ctx.fillText("GAME OVER", ctx.canvas.width / 2, ctx.canvas.height / 2 - 40);
+
+  ctx.font = '24px MedievalSharp, Arial, serif';
+  ctx.fillStyle = "#f9f1dc";
+  ctx.fillText("Press [R] to Restart", ctx.canvas.width / 2, ctx.canvas.height / 2 + 20);
+
+  ctx.textAlign = "left"; // Reset alignment for other renders
+}
 // Start combat mode
 function startCombat(enemy) {
   gameState.mode = "combat";
@@ -237,9 +260,42 @@ function checkQuest() {
   }
 }
 
+function restartGame() {
+  // Reset player stats
+  Object.assign(gameState.player, {
+    health: 100,
+    magicka: 50,
+    stamina: 75,
+    location: "Po Tun Highlands",
+    xp: 0,
+    level: 1,
+    nextLevel: 100
+  });
+  gameState.previousLocations = [];
+  gameState.mode = "exploring";
+  gameState.combat = null;
+  gameState.dialog = null;
+  gameState.gameOver = false;
+  // Reset quests
+  Object.keys(gameState.quests).forEach(q => {
+    gameState.quests[q] = { started: false, completed: false, rewardGiven: false };
+  });
+  gameState.messageQueue = [];
+  addMessage("Game restarted! Good luck, Tosh Raka.");
+}
+
 // Keyboard input handler
 document.addEventListener('keypress', (e) => {
   const key = e.key.toUpperCase();
+
+  // Game Over: Only allow restart
+  if (gameState.mode === "gameover" || gameState.gameOver) {
+    if (e.key.toUpperCase() === 'R') {
+      restartGame();
+      renderWorld();
+    }
+    return;
+  }
 
   if (gameState.mode === "combat" && gameState.combat) {
     if (key === 'A') {
@@ -261,11 +317,11 @@ document.addEventListener('keypress', (e) => {
           gameState.combat.message += `\n${gameState.combat.enemy.name} retaliates for ${enemyDamage} damage!`;
 
           if (gameState.player.health <= 0) {
-            gameState.combat.message = "Your journey ends here...";
-            // Game over logic could go here
-            gameState.mode = "exploring";
-            gameState.combat = null;
-          }
+             gameState.combat.message = "Your journey ends here...";
+             gameState.mode = "gameover";
+             gameState.combat = null;
+             gameState.gameOver = true;
+         }
           renderWorld();
         }, 500);
       }
