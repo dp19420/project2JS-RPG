@@ -88,26 +88,27 @@ function addMessage(msg) {
 
 // --- WORD WRAPPING FUNCTION ---
 function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
-  const words = text.split(' ');
-  let line = '';
-  let testLine = '';
-  let lineArray = [];
-  for (let n = 0; n < words.length; n++) {
-    testLine = line + words[n] + ' ';
-    let metrics = ctx.measureText(testLine);
-    let testWidth = metrics.width;
-    if (testWidth > maxWidth && n > 0) {
-      lineArray.push(line);
-      line = words[n] + ' ';
-    } else {
-      line = testLine;
+  const lines = text.split('\n');
+  let currentY = y;
+  lines.forEach(line => {
+    let words = line.split(' ');
+    let currentLine = '';
+    for (let n = 0; n < words.length; n++) {
+      let testLine = currentLine + words[n] + ' ';
+      let metrics = ctx.measureText(testLine);
+      let testWidth = metrics.width;
+      if (testWidth > maxWidth && n > 0) {
+        ctx.fillText(currentLine, x, currentY);
+        currentLine = words[n] + ' ';
+        currentY += lineHeight;
+      } else {
+        currentLine = testLine;
+      }
     }
-  }
-  lineArray.push(line);
-  for (let k = 0; k < lineArray.length; k++) {
-    ctx.fillText(lineArray[k], x, y + k * lineHeight);
-  }
-  return y + lineArray.length * lineHeight;
+    ctx.fillText(currentLine, x, currentY);
+    currentY += lineHeight;
+  });
+  return currentY;
 }
 
 // Render function
@@ -203,4 +204,4 @@ function drawCombat(ctx) {
 // Dialog drawing
 function drawDialog(ctx) {
   const dialog = gameState.dialog;
-  ctx.fillStyle = '#4a2e00';
+  ctx.fillStyle = '#4a2e00';}
