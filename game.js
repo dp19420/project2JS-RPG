@@ -204,4 +204,12 @@ function drawCombat(ctx) {
 // Dialog drawing
 function drawDialog(ctx) {
   const dialog = gameState.dialog;
-  ctx.fillStyle = '#4a2e00';}
+  ctx.fillStyle = '#4a2e00';
+ctx.font = '22px MedievalSharp, Arial, serif';
+  // Properly wrap the dialog message
+  let y = wrapText(ctx, dialog.message, 40, 40, 700, 26);
+
+  ctx.font = '18px MedievalSharp, Arial, serif';
+  dialog.options.forEach((opt, i) => {
+    ctx.fillText(`[${opt.key}] ${opt.text}`, 40, y + 20 + i * 30);
+  });}
