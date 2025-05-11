@@ -319,19 +319,19 @@ document.addEventListener('keypress', (e) => {
         setTimeout(() => {
           const enemyDamage = Math.floor(Math.random() * locationEncounters[gameState.player.location].attack);
           gameState.player.health -= enemyDamage;
-          gameState.player.health = Math.max(0, gameState.player.health); // Clamp to zero
+          gameState.player.health = Math.max(0, gameState.player.health); 
           gameState.combat.message += `\n${gameState.combat.enemy.name} retaliates for ${enemyDamage} damage!`;
 
-          if (gameState.player.health <= 0) {
-            gameState.combat.message += "\nYour journey ends here...";
-            gameState.mode = "gameover";
-            gameState.combat = null;
-            gameState.gameOver = true;
-            renderWorld();
-            return;
-          }
-          renderWorld();
-        }, 500);
+        if (gameState.player.health <= 0) {
+          gameState.combat.message += "\nYour journey ends here...";
+          gameState.mode = "gameover";
+          gameState.combat = null;
+          gameState.gameOver = true;
+    renderWorld();
+    return;
+  }
+  renderWorld();
+}, 500);
       }
       renderWorld();
     } else if (key === 'F') {
