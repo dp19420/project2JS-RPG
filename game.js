@@ -311,7 +311,7 @@ function restartGame() {
 }
 
 // --- KEY INPUT HANDLER ---
-document.addEventListener('keypress', (e) => {
+document.addEventListener('keydown', (e) => {
   // Game Over: Only allow restart
   if (gameState.mode === "gameover" || gameState.gameOver) {
     if (e.key.toUpperCase() === 'R') {
