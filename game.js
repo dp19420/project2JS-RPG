@@ -212,4 +212,6 @@ ctx.font = '22px MedievalSharp, Arial, serif';
   ctx.font = '18px MedievalSharp, Arial, serif';
   dialog.options.forEach((opt, i) => {
     ctx.fillText(`[${opt.key}] ${opt.text}`, 40, y + 20 + i * 30);
-  });}
+  });
+}
+renderWorld();
