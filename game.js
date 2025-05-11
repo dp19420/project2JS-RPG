@@ -140,7 +140,6 @@ function renderWorld() {
     drawDialog(ctx);
     return;
   }
-
   // Exploration mode rendering
   const loc = gameState.locations[gameState.player.location];
 
