@@ -205,8 +205,7 @@ function drawCombat(ctx) {
 function drawDialog(ctx) {
   const dialog = gameState.dialog;
   ctx.fillStyle = '#4a2e00';
-ctx.font = '22px MedievalSharp, Arial, serif';
-  // Properly wrap the dialog message
+  ctx.font = '22px MedievalSharp, Arial, serif';
   let y = wrapText(ctx, dialog.message, 40, 40, 700, 26);
 
   ctx.font = '18px MedievalSharp, Arial, serif';
@@ -214,4 +213,203 @@ ctx.font = '22px MedievalSharp, Arial, serif';
     ctx.fillText(`[${opt.key}] ${opt.text}`, 40, y + 20 + i * 30);
   });
 }
+
+// Game Over drawing
+function drawGameOver(ctx) {
+  ctx.fillStyle = "rgba(0,0,0,0.7)";
+  ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+  ctx.font = 'bold 48px MedievalSharp, Arial, serif';
+  ctx.fillStyle = "#e74c3c";
+  ctx.textAlign = "center";
+  ctx.fillText("GAME OVER", ctx.canvas.width / 2, ctx.canvas.height / 2 - 40);
+
+  ctx.font = '24px MedievalSharp, Arial, serif';
+  ctx.fillStyle = "#f9f1dc";
+  ctx.fillText("Press [R] to Restart", ctx.canvas.width / 2, ctx.canvas.height / 2 + 20);
+
+  ctx.textAlign = "left";
+}
+
+// Quest checks and dialog triggers
+function checkQuest() {
+  if (
+    gameState.player.location === "Lotus Valley" &&
+    !gameState.quests["Lotus Valley"].started &&
+    gameState.mode === "exploring"
+  ) {
+    startDialog(
+      "A wounded monk asks for help retrieving a sacred lotus from the Kamal Ice Fortress. Will you accept?",
+      [
+        { key: 'Y', text: 'Yes' },
+        { key: 'N', text: 'No' }
+      ]
+    );
+  }
+
+  if (
+    gameState.player.location === "Kamal Ice Fortress" &&
+    gameState.quests["Lotus Valley"].started &&
+    !gameState.quests["Lotus Valley"].completed &&
+    gameState.mode === "exploring"
+  ) {
+    addMessage("You found the Sacred Lotus! Return it to the monk in Lotus Valley.");
+    gameState.quests["Lotus Valley"].completed = true;
+  }
+
+  if (
+    gameState.player.location === "Lotus Valley" &&
+    gameState.quests["Lotus Valley"].completed &&
+    !gameState.quests["Lotus Valley"].rewardGiven &&
+    gameState.mode === "exploring"
+  ) {
+    addMessage("The monk thanks you and bestows a blessing. Quest complete!");
+    gainXP(100);
+    gameState.quests["Lotus Valley"].rewardGiven = true;
+  }
+}
+
+// Start combat
+function startCombat(enemy) {
+  gameState.mode = "combat";
+  gameState.combat = {
+    enemy: { ...enemy },
+    message: `Encountered ${enemy.name}! Press [A]ttack or [F]lee.`
+  };
+  renderWorld();
+}
+
+// Start dialog
+function startDialog(message, options) {
+  gameState.mode = "dialog";
+  gameState.dialog = { message, options };
+  renderWorld();
+}
+
+// Restart game
+function restartGame() {
+  Object.assign(gameState.player, {
+    health: 100,
+    magicka: 50,
+    stamina: 75,
+    location: "Po Tun Highlands",
+    xp: 0,
+    level: 1,
+    nextLevel: 100
+  });
+  gameState.previousLocations = [];
+  gameState.mode = "exploring";
+  gameState.combat = null;
+  gameState.dialog = null;
+  gameState.gameOver = false;
+  Object.keys(gameState.quests).forEach(q => {
+    gameState.quests[q] = { started: false, completed: false, rewardGiven: false };
+  });
+  gameState.messageQueue = [];
+  addMessage("Game restarted! Good luck, Tosh Raka.");
+  renderWorld();
+}
+
+// --- KEY INPUT HANDLER ---
+document.addEventListener('keypress', (e) => {
+  // Game Over: Only allow restart
+  if (gameState.mode === "gameover" || gameState.gameOver) {
+    if (e.key.toUpperCase() === 'R') {
+      restartGame();
+    }
+    return;
+  }
+
+  const key = e.key.toUpperCase();
+
+  if (gameState.mode === "combat" && gameState.combat) {
+    if (key === 'A') {
+      // Player attacks
+      const damage = Math.floor(Math.random() * 20) + 10;
+      gameState.combat.enemy.health -= damage;
+      gameState.combat.enemy.health = Math.max(0, gameState.combat.enemy.health);
+      gameState.combat.message = `You strike for ${damage} damage!`;
+
+      if (gameState.combat.enemy.health <= 0) {
+        gameState.combat.message = `${gameState.combat.enemy.name} defeated!`;
+        gameState.mode = "exploring";
+        gameState.combat = null;
+        gainXP(50);
+        renderWorld();
+      } else {
+        setTimeout(() => {
+          const enemyDamage = Math.floor(Math.random() * locationEncounters[gameState.player.location].attack);
+          gameState.player.health -= enemyDamage;
+          gameState.player.health = Math.max(0, gameState.player.health);
+          gameState.combat.message += `\n${gameState.combat.enemy.name} retaliates for ${enemyDamage} damage!`;
+
+          if (gameState.player.health <= 0) {
+            gameState.combat.message += "\nYour journey ends here...";
+            gameState.mode = "gameover";
+            gameState.combat = null;
+            gameState.gameOver = true;
+            renderWorld();
+            return;
+          }
+          renderWorld();
+        }, 500);
+      }
+      renderWorld();
+    } else if (key === 'F') {
+      gameState.mode = "exploring";
+      gameState.combat = null;
+      addMessage("You fled the combat.");
+      renderWorld();
+    }
+    return;
+  }
+
+  if (gameState.mode === "dialog" && gameState.dialog) {
+    const option = gameState.dialog.options.find(opt => opt.key === key);
+    if (option) {
+      if (gameState.player.location === "Lotus Valley" && !gameState.quests["Lotus Valley"].started && option.key === 'Y') {
+        gameState.quests["Lotus Valley"].started = true;
+        addMessage("Quest started: Retrieve the Sacred Lotus from Kamal Ice Fortress!");
+      } else if (option.key === 'N') {
+        addMessage("You declined the monk's request.");
+      }
+      gameState.mode = "exploring";
+      gameState.dialog = null;
+      renderWorld();
+    }
+    return;
+  }
+
+  // Exploration mode input
+  if (gameState.mode === "exploring") {
+    if (key === '0') {
+      // Go back if possible
+      if (gameState.previousLocations.length > 0) {
+        gameState.player.location = gameState.previousLocations.pop();
+        addMessage(`Returned to ${gameState.player.location}.`);
+        renderWorld();
+      }
+      return;
+    }
+
+    // Travel to connected location by number key
+    if (key >= '1' && key <= '9') {
+      const loc = gameState.locations[gameState.player.location];
+      const index = parseInt(key) - 1;
+      const newLocation = loc.connections[index];
+      if (newLocation) {
+        gameState.previousLocations.push(gameState.player.location);
+        gameState.player.location = newLocation;
+        addMessage(`Traveled to ${newLocation}.`);
+        renderWorld();
+
+        if (locationEncounters[newLocation]) {
+          startCombat(locationEncounters[newLocation]);
+        }
+      }
+    }
+  }
+});
+
+// --- INITIAL RENDER ---
 renderWorld();
